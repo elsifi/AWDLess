@@ -3,16 +3,16 @@ import AppIntents
 /// Shortcuts / automation support: "Set AWDLess mode to Keep off for 1 hour". Answers AWDLControl issue #5
 /// (web-app games, custom automations) without adding app-specific configuration.
 enum AWDLessMode: String, AppEnum {
-    case auto, protectNow, pause
-    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "AWDLess Mode")
+    case auto, offNow, alwaysOn
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Continuity Mode")
     static var caseDisplayRepresentations: [AWDLessMode: DisplayRepresentation] = [
-        .auto: "Automatic", .protectNow: "Protect now (AirDrop & Handoff paused)", .pause: "Pause (not protecting)",
+        .auto: "Auto (off during meetings)", .offNow: "Continuity off now", .alwaysOn: "Continuity always on",
     ]
 }
 
 struct SetModeIntent: AppIntent {
     static var title: LocalizedStringResource = "Set AWDLess Mode"
-    static var description = IntentDescription("Automatic meeting protection, protect now, or pause.")
+    static var description = IntentDescription("Continuity (Universal Control, AirDrop, Handoff): off during meetings, off now, or always on.")
     static var openAppWhenRun = false
 
     @Parameter(title: "Mode") var mode: AWDLessMode
@@ -23,8 +23,8 @@ struct SetModeIntent: AppIntent {
         let until: Date? = minutes > 0 ? Date().addingTimeInterval(TimeInterval(minutes * 60)) : nil
         switch mode {
         case .auto: AppState.shared.setOverride(.automatic)
-        case .protectNow: AppState.shared.setOverride(.forceOff(until: until))
-        case .pause: AppState.shared.setOverride(.forceOn(until: until))
+        case .offNow: AppState.shared.setOverride(.forceOff(until: until))
+        case .alwaysOn: AppState.shared.setOverride(.forceOn(until: until))
         }
         return .result(dialog: "AWDLess: \(AppState.shared.statusLine)")
     }

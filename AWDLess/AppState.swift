@@ -30,6 +30,7 @@ final class AppState: ObservableObject {
     private let games = GameMonitor()
     private let network = NetworkMonitor()
     private var pinger: Pinger?
+    private let traffic = AWDLTraffic()
     private let log = Logger(subsystem: AWDLessIDs.app, category: "state")
 
     // Outputs
@@ -40,6 +41,7 @@ final class AppState: ObservableObject {
     @Published private(set) var onWiFi = false
     @Published private(set) var routerAddress: String?
     @Published private(set) var health = LinkHealth()
+    @Published private(set) var continuityBytesPerSec: Double = 0
     @Published private(set) var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     private var graceTimer: Timer?
@@ -63,6 +65,8 @@ final class AppState: ObservableObject {
         Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.helper.fetchStatus() }
         }
+        traffic.onSample = { [weak self] bps in self?.continuityBytesPerSec = bps }
+        traffic.start()
         restoreOverride()
         firstLaunchNotice()
     }
@@ -162,13 +166,13 @@ final class AppState: ObservableObject {
     var statusLine: String {
         switch headline {
         case .helperMissing: return "Helper not enabled"
-        case .standby: return "Standing by"
-        case .ethernet: return "On Ethernet, nothing to do"
-        case .protecting: return "Protecting \(subject)"
-        case .protectingStalling: return "Protecting \(subject), link stalling"
-        case .restoring: return "Restoring AWDL shortly"
-        case .manualOff: return "Protecting (manual)"
-        case .manualOn: return "Paused"
+        case .standby: return "Standing by, Continuity on"
+        case .ethernet: return "On Ethernet, Continuity on"
+        case .protecting: return "Meeting (\(subject)), Continuity off"
+        case .protectingStalling: return "Meeting (\(subject)), Continuity off, link stalling"
+        case .restoring: return "Meeting ended, Continuity back on shortly"
+        case .manualOff: return "Continuity off (manual)"
+        case .manualOn: return "Continuity always on"
         }
     }
 
@@ -277,10 +281,10 @@ final class AppState: ObservableObject {
             guard granted else { return }
             let content = UNMutableNotificationContent()
             Task { @MainActor in
-                content.title = self.suppressed ? "Protecting your call" : "Call ended"
+                content.title = self.suppressed ? "Meeting detected, Continuity off" : "Meeting ended, Continuity on"
                 content.body = self.suppressed
-                    ? "Protecting \(self.subject.isEmpty ? "your call" : self.subject). AirDrop and Handoff pause until it ends."
-                    : "AirDrop, Handoff and Continuity are available again."
+                    ? "\(self.subject.isEmpty ? "A call" : self.subject) started. Universal Control, AirDrop and Handoff are off until it ends."
+                    : "Universal Control, AirDrop and Handoff are available again."
                 center.add(UNNotificationRequest(identifier: "awdl-\(self.suppressed)", content: content, trigger: nil))
             }
         }

@@ -22,15 +22,15 @@ private struct GeneralTab: View {
     var body: some View {
         Form {
             Toggle("Launch at login", isOn: Binding(get: { state.launchAtLogin }, set: { state.setLaunchAtLogin($0) }))
-            Toggle("Only protect when on Wi-Fi", isOn: $prefs.wifiOnly)
-            Text("On Ethernet the AirDrop radio cannot hurt the connection, so nothing is changed.").settingsHint()
+            Toggle("Only switch Continuity off when on Wi-Fi", isOn: $prefs.wifiOnly)
+            Text("On Ethernet, Universal Control and AirDrop cannot disturb the connection, so they stay on.").settingsHint()
             VStack(alignment: .leading) {
                 Slider(value: $prefs.gracePeriod, in: 0...120, step: 5) {
-                    Text("Keep protecting for \(Int(prefs.gracePeriod)) s after a call ends")
+                    Text("Keep Continuity off for \(Int(prefs.gracePeriod)) s after a call ends")
                 }
                 Text("Avoids AirDrop flapping when a camera is toggled briefly.").settingsHint()
             }
-            Toggle("Notify when protection starts and ends", isOn: $prefs.notifications)
+            Toggle("Notify when Continuity switches off and on", isOn: $prefs.notifications)
             Picker("Menu bar icon", selection: $prefs.iconStyle) {
                 ForEach(MenuBarIcon.Style.allCases) { style in
                     HStack { Image(nsImage: MenuBarIcon.image(for: .protecting, style: style)); Text(style.label) }.tag(style)
@@ -48,7 +48,7 @@ private struct TriggersTab: View {
         Form {
             Section {
                 Toggle("A camera is in use", isOn: $prefs.triggerCamera)
-                Text("Any app streaming any camera: built-in, USB or Continuity Camera. This is the measured cause of call freezes.").settingsHint()
+                Text("Any app streaming any camera: built-in, USB or Continuity Camera. Note: Continuity Camera itself may stop while Continuity is off; use the built-in camera in calls.").settingsHint()
                 Toggle("A meeting app is using the microphone", isOn: $prefs.triggerMeetingMic)
                 Text("Audio-only calls in Zoom, Teams, FaceTime, Slack, Webex, Discord, Meet and others.").settingsHint()
                 Toggle("Any app is using the microphone", isOn: $prefs.triggerAnyMic)
@@ -147,7 +147,7 @@ private struct AboutTab: View {
             Text("AWDLess").font(.title2.bold())
             Text("Steady Call").font(.subheadline).foregroundStyle(.secondary)
             Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")").font(.caption).foregroundStyle(.secondary)
-            Text("Apple Wireless Direct Link (AirDrop, Handoff, Continuity) makes the Wi-Fi radio hop channels on a shared schedule. During a video call that shows up as freezes of one to three seconds, for every Mac nearby. AWDLess keeps AWDL off exactly while a camera is in use.")
+            Text("Continuity features such as Universal Control, AirDrop and Handoff run over a peer-to-peer Wi-Fi link (AWDL) that makes the radio hop channels on a shared schedule. During a video call that shows up as freezes of one to three seconds, on every Mac in the link. AWDLess switches that link off exactly while you are in a meeting.")
                 .font(.callout).multilineTextAlignment(.center).padding(.horizontal)
             Text("Mechanism inspired by AWDLControl by James Howard. MIT License.")
                 .font(.caption).foregroundStyle(.secondary)

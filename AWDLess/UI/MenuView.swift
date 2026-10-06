@@ -61,25 +61,25 @@ struct MenuView: View {
     private var title: String {
         switch state.headline {
         case .helperMissing: "Setup needed"
-        case .standby: "Standing by"
-        case .ethernet: "On Ethernet"
-        case .protecting: "Protecting your call"
-        case .protectingStalling: "Call protected, link stalling"
-        case .restoring: "Call ended"
-        case .manualOff: "Protecting (manual)"
-        case .manualOn: "Paused"
+        case .standby: "Standing by · Continuity on"
+        case .ethernet: "On Ethernet · Continuity on"
+        case .protecting: "Meeting · Continuity off"
+        case .protectingStalling: "Meeting · link still stalling"
+        case .restoring: "Meeting ended"
+        case .manualOff: "Continuity off"
+        case .manualOn: "Continuity always on"
         }
     }
     private var subtitle: String {
         switch state.headline {
-        case .helperMissing: "Install the helper once so AWDLess can protect calls."
-        case .standby: state.prefs.triggerCamera ? "Will protect your call as soon as a camera turns on." : "Camera detection is off."
-        case .ethernet: "\(state.subject). AWDL cannot hurt a wired link."
-        case .protecting: "\(state.subject). AirDrop and Handoff paused."
-        case .protectingStalling: "\(state.subject). The link stalls even with AWDL off; something else is interfering."
-        case .restoring: "AWDL comes back in \(Int(state.prefs.gracePeriod)) s."
-        case .manualOff: "AirDrop and Handoff paused until you switch back."
-        case .manualOn: "Meetings are not protected. AirDrop and Handoff work."
+        case .helperMissing: "Install the helper once so AWDLess can switch Continuity off during meetings."
+        case .standby: state.prefs.triggerCamera ? "Universal Control, AirDrop and Handoff work. They switch off as soon as a camera turns on." : "Camera detection is off."
+        case .ethernet: "\(state.subject). Continuity cannot disturb a wired link, so it stays on."
+        case .protecting: "\(state.subject). Universal Control, AirDrop and Handoff are off until the call ends."
+        case .protectingStalling: "\(state.subject). Continuity is off, yet the Wi-Fi link still stalls. Something else is interfering."
+        case .restoring: "Continuity comes back on in \(Int(state.prefs.gracePeriod)) s."
+        case .manualOff: "Universal Control, AirDrop and Handoff are off until you switch back."
+        case .manualOn: "Never switched off. Calls may freeze while Universal Control is in use."
         }
     }
 
@@ -107,6 +107,11 @@ struct MenuView: View {
     private var linkCard: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
+                Text("Continuity traffic").font(.caption.weight(.medium)).foregroundStyle(.secondary)
+                Spacer()
+                Text(trafficText).font(.caption.monospacedDigit()).foregroundStyle(state.continuityBytesPerSec > 20_000 ? Color.orange : Color.secondary)
+            }
+            HStack {
                 Text("Wi-Fi link").font(.caption.weight(.medium)).foregroundStyle(.secondary)
                 Spacer()
                 if state.health.samples.isEmpty {
@@ -132,14 +137,27 @@ struct MenuView: View {
         .background(RoundedRectangle(cornerRadius: 10).fill(.quaternary.opacity(0.5)))
     }
 
+    private var trafficText: String {
+        let bps = state.continuityBytesPerSec
+        if state.suppressed { return "off" }
+        if bps < 1_000 { return "quiet" }
+        if bps < 1_000_000 { return "\(Int(bps / 1_000)) KB/s" }
+        return String(format: "%.1f MB/s", bps / 1_000_000)
+    }
+
     // MARK: Mode
 
     private var modeCard: some View {
         VStack(spacing: 6) {
+            HStack {
+                Text("Continuity").font(.caption.weight(.medium)).foregroundStyle(.secondary)
+                Text("Universal Control · AirDrop · Handoff").font(.caption2).foregroundStyle(.tertiary)
+                Spacer()
+            }
             Picker("", selection: Binding(get: { pickerValue }, set: { apply($0) })) {
                 Text("Auto").tag(0)
-                Text("Protect now").tag(1)
-                Text("Pause").tag(2)
+                Text("Off now").tag(1)
+                Text("Always on").tag(2)
             }.pickerStyle(.segmented).labelsHidden()
             HStack(spacing: 6) {
                 Text(modeCaption).font(.caption2).foregroundStyle(.secondary).lineLimit(2).fixedSize(horizontal: false, vertical: true)
@@ -177,9 +195,9 @@ struct MenuView: View {
         switch state.override { case .forceOff(let u), .forceOn(let u): until = u; case .automatic: until = nil }
         let when = until.map { "until \($0.formatted(date: .omitted, time: .shortened))" } ?? "until you choose Auto"
         switch state.override {
-        case .automatic: return "Protects meetings automatically; AirDrop and Handoff work in between."
-        case .forceOff: return "Protecting \(when). AirDrop and Handoff paused."
-        case .forceOn: return "Not protecting \(when). AirDrop and Handoff work normally."
+        case .automatic: return "Off during meetings, on otherwise."
+        case .forceOff: return "Off \(when). Calls run clean; Universal Control and AirDrop unavailable."
+        case .forceOn: return "Never switched off \(when). Calls may freeze."
         }
     }
 
