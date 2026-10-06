@@ -24,6 +24,7 @@ final class AppState: ObservableObject {
     // Inputs
     let prefs = Preferences()
     let helper = HelperClient()
+    let updates = UpdateChecker()
     private let camera = CameraMonitor()
     private let microphone = MicrophoneMonitor()
     private let apps = AppMonitor()
@@ -69,6 +70,7 @@ final class AppState: ObservableObject {
         traffic.start()
         restoreOverride()
         firstLaunchNotice()
+        updates.startDailyChecks()
     }
 
     // MARK: - Persistence (AWDLControl issue #2: mode must survive a restart)

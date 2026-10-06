@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AWDLess – Fix video call freezes on your Mac caused by Universal Control, AirDrop and Handoff</title>
+<meta name="description" content="Zoom, Teams, FaceTime or Meet freezing every minute on your MacBook over Wi-Fi? The cause is often AWDL, the radio link behind Universal Control, AirDrop and Handoff. AWDLess switches it off only while you are in a meeting. Free, open source, menu bar app for macOS 14+.">
+<link rel="canonical" href="https://elsifi.github.io/AWDLess/">
+<link rel="icon" href="icon-1024.png" type="image/png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="AWDLess – Steady video calls on your Mac">
+<meta property="og:description" content="Video calls freezing on Wi-Fi? Universal Control, AirDrop and Handoff share your Mac's Wi-Fi radio. AWDLess pauses them only during meetings.">
+<meta property="og:image" content="https://elsifi.github.io/AWDLess/icon-1024.png">
+<meta property="og:url" content="https://elsifi.github.io/AWDLess/">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"AWDLess","alternateName":"AWDLess – Steady Call","operatingSystem":"macOS 14 or later","applicationCategory":"UtilitiesApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"downloadUrl":"https://github.com/elsifi/AWDLess/releases/latest","softwareVersion":"0.1.0","license":"https://opensource.org/licenses/MIT","description":"Keeps Universal Control, AirDrop and Handoff (AWDL) switched off while you are in a video meeting on your Mac, so calls stop freezing.","author":{"@type":"Person","name":"Mohamed ElSifi"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Why does my video call freeze every minute on my MacBook?","acceptedAnswer":{"@type":"Answer","text":"Apple's Continuity features (Universal Control, AirDrop, Handoff, Sidecar) use a peer-to-peer Wi-Fi link called AWDL. It makes the Wi-Fi radio leave your network's channel on a shared schedule. On a video call that shows up as freezes of one to three seconds, every 10 to 20 seconds, on every Mac in the link. Your internet connection is usually fine."}},
+{"@type":"Question","name":"How do I know it is AWDL and not my internet provider?","acceptedAnswer":{"@type":"Answer","text":"Ping your router while on a call. If the pings to the router stall for one to three seconds at the same moments as the call, the problem is between your Mac and the router, not the internet. AWDLess has a built-in test that measures this for you and tells you honestly if it cannot help."}},
+{"@type":"Question","name":"Does AWDLess break AirDrop and Universal Control?","acceptedAnswer":{"@type":"Answer","text":"Only while you are in a meeting. As soon as the camera turns off, Continuity comes back automatically. On Ethernet nothing is changed at all."}},
+{"@type":"Question","name":"Is it safe? Why does it need a helper?","acceptedAnswer":{"@type":"Answer","text":"Switching the awdl0 network interface requires administrator rights, so macOS installs a small helper that you approve once in System Settings. The helper only accepts commands from AWDLess signed by the same developer, and it restores Continuity whenever the app quits. The code is open source under the MIT license."}},
+{"@type":"Question","name":"Is AWDLess on the Mac App Store?","acceptedAnswer":{"@type":"Answer","text":"No. The App Store sandbox does not allow an app to change a network interface, so this kind of fix can only be distributed directly. AWDLess is notarized by Apple and free to download from GitHub."}}
+]}
+</script>
+<style>
+:root{--bg:#0b0f16;--card:#131a26;--text:#e8edf5;--muted:#9aa7bb;--accent:#59c7fa;--ok:#4ade80;--warn:#f59e0b;--radius:16px}
+@media (prefers-color-scheme: light){:root{--bg:#f6f8fb;--card:#ffffff;--text:#0f172a;--muted:#55627a;--accent:#0a84ff}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:880px;margin:0 auto;padding:40px 20px 80px}
+header{display:flex;align-items:center;gap:18px;margin-bottom:28px}header img{width:84px;height:84px}
+h1{font-size:34px;line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}.tag{color:var(--muted);margin:0}
+.hero p{font-size:19px;color:var(--muted);max-width:640px}
+.cta{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:#06121f;font-weight:600;padding:12px 20px;border-radius:12px;text-decoration:none;margin:10px 12px 4px 0}
+.cta.secondary{background:var(--card);color:var(--text);border:1px solid rgba(128,140,160,.25)}
+.sub{color:var(--muted);font-size:14px}
+section{margin-top:46px}h2{font-size:24px;letter-spacing:-.01em;margin:0 0 12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.card{background:var(--card);border-radius:var(--radius);padding:18px 18px 14px;border:1px solid rgba(128,140,160,.15)}
+.card h3{margin:0 0 6px;font-size:17px}.card p{margin:0;color:var(--muted);font-size:15px}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--radius);overflow:hidden;font-size:15px}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid rgba(128,140,160,.15)}th{color:var(--muted);font-weight:600}
+td.good{color:var(--ok)}td.bad{color:var(--warn)}
+ol.steps li{margin:8px 0}code{background:rgba(128,140,160,.15);padding:2px 6px;border-radius:6px;font-size:14px}
+details{background:var(--card);border-radius:12px;padding:12px 16px;margin:8px 0;border:1px solid rgba(128,140,160,.15)}summary{cursor:pointer;font-weight:600}
+footer{margin-top:60px;color:var(--muted);font-size:14px}a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <img src="icon-1024.png" alt="AWDLess app icon: two Macs with their link cut" width="84" height="84">
+  <div><h1>AWDLess</h1><p class="tag">Steady Call. Stop your Mac's video calls from freezing.</p></div>
+</header>
+
+<div class="hero">
+  <p>If Zoom, Teams, FaceTime or Google Meet freeze for a few seconds every minute on your MacBook, and only over Wi-Fi, the cause is probably not your internet. It is <strong>AWDL</strong>, the radio link behind Universal Control, AirDrop and Handoff. AWDLess switches it off <em>only while you are in a meeting</em>, and back on when you hang up.</p>
+  <a class="cta" href="https://github.com/elsifi/AWDLess/releases/latest">Download for macOS</a>
+  <a class="cta secondary" href="https://github.com/elsifi/AWDLess">Source on GitHub</a>
+  <p class="sub">Free · Open source (MIT) · macOS 14 Sonoma or later · Apple silicon and Intel · Notarized</p>
+</div>
+
+<section>
+  <h2>What happens on your Wi-Fi</h2>
+  <p>Continuity features talk to your other Apple devices over a peer-to-peer link that shares the same Wi-Fi radio as your network. To do that the radio leaves your router's channel on a fixed schedule. When Universal Control is active, or AirDrop is scanning, those trips get long. Your call's packets wait, then arrive in a burst: the picture freezes for one to three seconds, every 10 to 20 seconds. Every Mac in the link stalls at the same moment, even one that is not in the call.</p>
+  <table>
+    <thead><tr><th>Same call, measured from a second Mac (0.5 s pings to the router)</th><th>Lost</th><th>Worst delay</th><th>Stalls over 500 ms</th></tr></thead>
+    <tbody>
+      <tr><td>Continuity on, 2.4 min</td><td class="bad">3</td><td class="bad">1822 ms</td><td class="bad">13</td></tr>
+      <tr><td>Continuity off, 3.6 min</td><td class="good">0</td><td class="good">102 ms</td><td class="good">0</td></tr>
+    </tbody>
+  </table>
+  <p class="sub">FRITZ!Box 6660 on Vodafone cable, MacBook Pro with Universal Control to a Mac mini. The internet line, cable modem and router were ruled out first.</p>
+</section>
+
+<section>
+  <h2>What AWDLess does</h2>
+  <div class="cards">
+    <div class="card"><h3>Detects meetings</h3><p>A camera turning on, or a meeting app using the microphone. Zoom, Teams, FaceTime, Slack, Webex, Discord, Meet, and anything in a browser.</p></div>
+    <div class="card"><h3>Pauses Continuity, then restores it</h3><p>Universal Control, AirDrop and Handoff are off for exactly the length of the call. On Ethernet nothing is touched.</p></div>
+    <div class="card"><h3>Shows you the link</h3><p>Live router pings and a 60 s stall chart in the menu bar, plus a readout of Continuity traffic, so you can see it working.</p></div>
+    <div class="card"><h3>Tells you if it can't help</h3><p>The built-in test runs two minutes with Continuity on and two off, then gives a verdict. If your link is clean, it says so.</p></div>
+    <div class="card"><h3>Stays out of the way</h3><p>Menu bar only. Manual "off now" and "always on" with timers. Shortcuts actions. Launch at login.</p></div>
+    <div class="card"><h3>Safe by design</h3><p>A small helper approved once in System Settings does the switching. It only talks to AWDLess and restores Continuity if the app quits.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Install</h2>
+  <ol class="steps">
+    <li><a href="https://github.com/elsifi/AWDLess/releases/latest">Download the latest release</a>, open the disk image and drag AWDLess to <strong>Applications</strong>.</li>
+    <li>Open AWDLess. Click the two-Macs icon in the menu bar, then <strong>Install</strong>, and allow it in System Settings when asked.</li>
+    <li>Join a call. The icon's link breaks while you're in the meeting and reconnects when you hang up.</li>
+  </ol>
+  <p class="sub">Prefer the command line? <code>brew install --cask awdless</code> is coming after the first release.</p>
+</section>
+
+<section>
+  <h2>Questions</h2>
+  <details><summary>Why does my video call freeze every minute on my MacBook?</summary><p>Apple's Continuity features use a peer-to-peer Wi-Fi link (AWDL) that makes the radio leave your network's channel on a shared schedule. On a call that shows up as freezes of one to three seconds. Your internet connection is usually fine.</p></details>
+  <details><summary>How do I know it is AWDL and not my internet provider?</summary><p>Ping your router during a call. If pings to the router stall at the same moments as the call, the problem is between your Mac and the router. AWDLess's built-in test measures exactly this.</p></details>
+  <details><summary>Does it break AirDrop and Universal Control?</summary><p>Only during a meeting. Continuity returns automatically when the camera turns off. On Ethernet nothing changes.</p></details>
+  <details><summary>Does Continuity Camera still work?</summary><p>Often yes, when the iPhone is on the same Wi-Fi network. If it drops, use the built-in camera during calls.</p></details>
+  <details><summary>Why is it not on the Mac App Store?</summary><p>The App Store sandbox does not allow changing a network interface, so this kind of fix can only be distributed directly. AWDLess is notarized by Apple.</p></details>
+  <details><summary>Is there a manual alternative?</summary><p>Yes: <code>sudo ifconfig awdl0 down</code> before a call and <code>up</code> after. macOS tends to re-enable it on its own within seconds, which is what AWDLess handles for you.</p></details>
+</section>
+
+<footer>
+  <p>AWDLess is open source under the MIT license. Built by Mohamed ElSifi after a week of chasing a freezing meeting. Issues and ideas: <a href="https://github.com/elsifi/AWDLess/issues">GitHub</a>.</p>
+</footer>
+</div>
+</body>
+</html>

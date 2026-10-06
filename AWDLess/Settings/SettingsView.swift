@@ -141,6 +141,8 @@ private struct HelperTab: View {
 }
 
 private struct AboutTab: View {
+    @ObservedObject private var updates: UpdateChecker
+    init() { updates = AppState.shared.updates }
     var body: some View {
         VStack(spacing: 10) {
             Image(systemName: "antenna.radiowaves.left.and.right.slash").font(.system(size: 42)).foregroundStyle(Color.accentColor)
@@ -151,6 +153,15 @@ private struct AboutTab: View {
                 .font(.callout).multilineTextAlignment(.center).padding(.horizontal)
             Text("MIT License.")
                 .font(.caption).foregroundStyle(.secondary)
+            HStack {
+                Button(updates.checking ? "Checking…" : "Check for Updates") { updates.check() }.disabled(updates.checking)
+                Button("Test your meeting…") { DiagnosticsWindow.shared.show() }
+            }
+            if let v = updates.availableVersion {
+                Button("Version \(v) is available. Open release page") { updates.openReleasePage() }.buttonStyle(.link)
+            } else if let t = updates.lastChecked {
+                Text("Up to date. Checked \(t.formatted(date: .omitted, time: .shortened)).").font(.caption2).foregroundStyle(.tertiary)
+            }
             Link("github.com/elsifi/AWDLess", destination: URL(string: "https://github.com/elsifi/AWDLess")!).font(.caption)
         }
         .padding()

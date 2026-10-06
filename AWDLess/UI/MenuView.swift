@@ -10,6 +10,7 @@ struct MenuView: View {
         VStack(spacing: 8) {
             statusCard
             if state.helper.status != .enabled { helperCard }
+            if let v = state.updates.availableVersion { updateCard(v) }
             linkCard
             modeCard
             footer
@@ -100,6 +101,16 @@ struct MenuView: View {
     private var helperHint: String {
         if !state.isInApplicationsFolder { return "Move AWDLess to the Applications folder first, then install the helper." }
         return state.helper.status == .requiresApproval ? "Approve AWDLess in Login Items." : "Needs a small root helper, installed by macOS."
+    }
+
+    private func updateCard(_ version: String) -> some View {
+        HStack {
+            Text("AWDLess \(version) is available.").font(.caption).foregroundStyle(.secondary)
+            Spacer()
+            Button("Get it") { state.updates.openReleasePage() }.controlSize(.small).buttonStyle(.borderedProminent)
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 10).fill(.blue.opacity(0.12)))
     }
 
     // MARK: Link health
@@ -206,6 +217,7 @@ struct MenuView: View {
     private var footer: some View {
         HStack {
             Button { SettingsWindow.shared.show() } label: { Label("Settings", systemImage: "gearshape") }.keyboardShortcut(",")
+            Button { DiagnosticsWindow.shared.show() } label: { Label("Test", systemImage: "stethoscope") }
             Spacer()
             Button { QuitConfirmation.run() } label: { Label("Quit", systemImage: "power") }.keyboardShortcut("q")
         }

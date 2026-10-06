@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://elsifi.github.io/AWDLess/sitemap.xml
