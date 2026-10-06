@@ -37,7 +37,7 @@ final class AppState: ObservableObject {
     @Published private(set) var triggers: [Trigger] = []
     @Published private(set) var suppressed = false
     @Published private(set) var inGrace = false
-    @Published var override: Override = .automatic { didSet { reevaluate() } }
+    @Published var override: Override = .automatic { didSet { reevaluate(allowGrace: false) } }
     @Published private(set) var onWiFi = false
     @Published private(set) var routerAddress: String?
     @Published private(set) var health = LinkHealth()
@@ -176,7 +176,7 @@ final class AppState: ObservableObject {
         }
     }
 
-    func reevaluate() {
+    func reevaluate(allowGrace: Bool = true) {
         let newTriggers = activeTriggers
         if newTriggers != triggers { triggers = newTriggers }
 
@@ -188,13 +188,14 @@ final class AppState: ObservableObject {
         case .automatic: desired = !triggers.isEmpty && wifiOK
         }
 
-        if case .automatic = override, !desired, suppressed, prefs.gracePeriod > 0 {
-            // Keep AWDL off for the grace period, so a brief camera toggle does not flap AirDrop.
+        if allowGrace, case .automatic = override, !desired, suppressed, prefs.gracePeriod > 0 {
+            // Keep Continuity off for the grace period, so a brief camera toggle does not flap AirDrop.
+            // When the timer fires we re-evaluate WITHOUT grace, otherwise the grace would repeat forever.
             if graceTimer == nil {
                 inGrace = true
                 graceTimer = Timer.scheduledTimer(withTimeInterval: prefs.gracePeriod, repeats: false) { [weak self] _ in
                     Task { @MainActor in
-                        self?.graceTimer = nil; self?.inGrace = false; self?.reevaluate()
+                        self?.graceTimer = nil; self?.inGrace = false; self?.reevaluate(allowGrace: false)
                     }
                 }
             }
