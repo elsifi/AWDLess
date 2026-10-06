@@ -81,3 +81,8 @@ The fix needs a root helper, which the App Store sandbox forbids; there is no en
 ## License
 
 MIT. See LICENSE.
+
+## Field results
+
+- 2026-10-06: A/B on one call, AWDL toggled mid-call: 13 stalls over 500 ms in 2.4 min with AWDL on, 0 in 3.6 min with it off.
+- 2026-10-07: first real meeting with AWDLess 0.1.0 on the MacBook, Universal Control in use: no freezes.
