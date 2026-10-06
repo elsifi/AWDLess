@@ -17,13 +17,19 @@ DEV_ID=$(security find-identity -v -p codesigning | grep -o '"Developer ID Appli
 if [ -n "$DEV_ID" ]; then
   echo "Signing with: $DEV_ID"
   xcodebuild -project AWDLess.xcodeproj -scheme AWDLess -configuration Release -derivedDataPath build/DerivedData \
-    CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$DEV_ID" OTHER_CODE_SIGN_FLAGS="--timestamp" build | grep -E "error:|BUILD"
+    CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$DEV_ID" OTHER_CODE_SIGN_FLAGS="--timestamp" CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO build | grep -E "error:|BUILD"
 else
   echo "No Developer ID certificate found; signing with development identity (Gatekeeper will warn)."
   xcodebuild -project AWDLess.xcodeproj -scheme AWDLess -configuration Release -derivedDataPath build/DerivedData build | grep -E "error:|BUILD"
 fi
 rm -rf "$APP"; cp -R build/DerivedData/Build/Products/Release/AWDLess.app "$APP"
+if [ -n "$DEV_ID" ]; then
+  # Re-sign explicitly: helper without entitlements, app with its own. Guarantees no get-task-allow leaks in.
+  codesign --force --options runtime --timestamp --sign "$DEV_ID" "$APP/Contents/MacOS/AWDLessHelper"
+  codesign --force --options runtime --timestamp --sign "$DEV_ID" --entitlements AWDLess/AWDLess.entitlements "$APP"
+fi
 codesign --verify --deep --strict "$APP"
+codesign -d --entitlements - "$APP/Contents/MacOS/AWDLessHelper" 2>/dev/null | grep -q get-task-allow && { echo "helper still has get-task-allow"; exit 1; }
 
 rm -f build/AWDLess-$VERSION.dmg build/AWDLess-$VERSION.zip
 mkdir -p build/dmg && rm -rf build/dmg/* && cp -R "$APP" build/dmg/ && ln -s /Applications build/dmg/Applications
