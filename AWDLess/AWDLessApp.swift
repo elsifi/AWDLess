@@ -4,10 +4,16 @@ import SwiftUI
 struct AWDLessApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @StateObject private var state = AppState.shared
+    @State private var iconInserted = true
 
     var body: some Scene {
-        MenuBarExtra {
+        // AWDLControl issue #1: removing the icon must not leave an invisible app holding AWDL off.
+        MenuBarExtra(isInserted: Binding(get: { iconInserted }, set: { v in
+            iconInserted = v
+            if !v { NSApp.terminate(nil) }
+        })) {
             MenuView(helper: state.helper).environmentObject(state)
+                .onAppear { state.helper.refreshStatus(); state.helper.fetchStatus() }
         } label: {
             Image(nsImage: MenuBarIcon.image(for: iconState, style: state.prefs.iconStyle))
         }

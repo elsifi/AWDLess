@@ -58,9 +58,55 @@ final class AppState: ObservableObject {
         networkChanged()
         helper.refreshStatus()
         helper.fetchStatus()
-        Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.helper.refreshStatus(); self?.helper.fetchStatus() }
+        // AWDLControl issue #8: frequent SMAppService status checks spam Background Task Management.
+        // Status is re-read on user action and when the menu opens; the XPC ping here is cheap.
+        Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.helper.fetchStatus() }
         }
+        restoreOverride()
+        firstLaunchNotice()
+    }
+
+    // MARK: - Persistence (AWDLControl issue #2: mode must survive a restart)
+
+    private func restoreOverride() {
+        let d = UserDefaults.standard
+        let until = d.object(forKey: "overrideUntil") as? Date
+        if let until, until < Date() { d.removeObject(forKey: "overrideKind"); return }
+        switch d.string(forKey: "overrideKind") {
+        case "off": setOverride(.forceOff(until: until))
+        case "on": setOverride(.forceOn(until: until))
+        default: break
+        }
+    }
+    private func persistOverride(_ o: Override) {
+        let d = UserDefaults.standard
+        switch o {
+        case .automatic: d.removeObject(forKey: "overrideKind"); d.removeObject(forKey: "overrideUntil")
+        case .forceOff(let u): d.set("off", forKey: "overrideKind"); d.set(u, forKey: "overrideUntil")
+        case .forceOn(let u): d.set("on", forKey: "overrideKind"); d.set(u, forKey: "overrideUntil")
+        }
+    }
+
+    /// AWDLControl issue #9: people look for the app in the Dock. Say where it lives, once.
+    private func firstLaunchNotice() {
+        let key = "didShowFirstLaunchNotice"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert]) { granted, _ in
+            guard granted else { return }
+            let c = UNMutableNotificationContent()
+            c.title = "AWDLess lives in the menu bar"
+            c.body = "Click the camera icon at the top right to install the helper and see what is protected."
+            center.add(UNNotificationRequest(identifier: "first-launch", content: c, trigger: nil))
+        }
+    }
+
+    /// SMAppService needs a stable bundle path; warn if we are running from Downloads or a disk image.
+    var isInApplicationsFolder: Bool {
+        let path = Bundle.main.bundlePath
+        return path.hasPrefix("/Applications/") || path.hasPrefix(NSHomeDirectory() + "/Applications/") || path.contains("/DerivedData/")
     }
     private var cancellables = Set<AnyCancellable>()
 
@@ -116,13 +162,13 @@ final class AppState: ObservableObject {
     var statusLine: String {
         switch headline {
         case .helperMissing: return "Helper not enabled"
-        case .standby: return "Standing by, AWDL on"
+        case .standby: return "Standing by"
         case .ethernet: return "On Ethernet, nothing to do"
         case .protecting: return "Protecting \(subject)"
         case .protectingStalling: return "Protecting \(subject), link stalling"
         case .restoring: return "Restoring AWDL shortly"
-        case .manualOff: return "AWDL off (manual)"
-        case .manualOn: return "AWDL on (manual)"
+        case .manualOff: return "Protecting (manual)"
+        case .manualOn: return "Paused"
         }
     }
 
@@ -185,6 +231,7 @@ final class AppState: ObservableObject {
     func setOverride(_ o: Override) {
         overrideTimer?.invalidate(); overrideTimer = nil
         override = o
+        persistOverride(o)
         let until: Date?
         switch o { case .forceOff(let u), .forceOn(let u): until = u; case .automatic: until = nil }
         if let until {
@@ -230,7 +277,7 @@ final class AppState: ObservableObject {
             guard granted else { return }
             let content = UNMutableNotificationContent()
             Task { @MainActor in
-                content.title = self.suppressed ? "AWDL off" : "AWDL back on"
+                content.title = self.suppressed ? "Protecting your call" : "Call ended"
                 content.body = self.suppressed
                     ? "Protecting \(self.subject.isEmpty ? "your call" : self.subject). AirDrop and Handoff pause until it ends."
                     : "AirDrop, Handoff and Continuity are available again."

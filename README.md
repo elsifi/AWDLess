@@ -58,6 +58,17 @@ so it cannot go on the Mac App Store.
 3. Start a video call. The icon switches to the slashed antenna; the menu shows which camera triggered it and the live
    link-health sparkline.
 
+## Lessons taken from AWDLControl's issue tracker
+
+| Issue | What went wrong there | AWDLess |
+|---|---|---|
+| #8 | Frequent helper status checks flooded Background Task Management with notifications | Service status is read on user action and when the menu opens; no periodic registration attempts |
+| #1 | Removing the menu bar icon left the app running invisibly | Removing the icon quits the app; the helper restores AWDL |
+| #2 | Chosen mode was lost after reboot | "Protect now / Pause until…" is persisted and restored |
+| #5 | Web-app games could not be detected; author suggested Shortcuts | Shortcuts / App Intents: "Set AWDLess Mode", "Get AWDLess Status". Browser meetings are covered by the camera trigger |
+| #6 | No at-a-glance state | Outline icon = standing by, filled = protecting, badge = link stalling |
+| #9 | User looked for the app in the Dock | First-launch notification points to the menu bar; warning when not in /Applications |
+
 ## Product plan (not App Store)
 
 The fix needs a root helper, which the App Store sandbox forbids; there is no entitlement for it. So:

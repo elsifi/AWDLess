@@ -22,15 +22,15 @@ private struct GeneralTab: View {
     var body: some View {
         Form {
             Toggle("Launch at login", isOn: Binding(get: { state.launchAtLogin }, set: { state.setLaunchAtLogin($0) }))
-            Toggle("Only act when on Wi-Fi", isOn: $prefs.wifiOnly)
-            Text("On Ethernet AWDL cannot hurt the connection, so it is left alone.").settingsHint()
+            Toggle("Only protect when on Wi-Fi", isOn: $prefs.wifiOnly)
+            Text("On Ethernet the AirDrop radio cannot hurt the connection, so nothing is changed.").settingsHint()
             VStack(alignment: .leading) {
                 Slider(value: $prefs.gracePeriod, in: 0...120, step: 5) {
-                    Text("Keep AWDL off for \(Int(prefs.gracePeriod)) s after a call ends")
+                    Text("Keep protecting for \(Int(prefs.gracePeriod)) s after a call ends")
                 }
                 Text("Avoids AirDrop flapping when a camera is toggled briefly.").settingsHint()
             }
-            Toggle("Notify when AWDL turns off or on", isOn: $prefs.notifications)
+            Toggle("Notify when protection starts and ends", isOn: $prefs.notifications)
             Picker("Menu bar icon", selection: $prefs.iconStyle) {
                 ForEach(MenuBarIcon.Style.allCases) { style in
                     HStack { Image(nsImage: MenuBarIcon.image(for: .protecting, style: style)); Text(style.label) }.tag(style)

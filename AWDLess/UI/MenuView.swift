@@ -66,20 +66,20 @@ struct MenuView: View {
         case .protecting: "Protecting your call"
         case .protectingStalling: "Call protected, link stalling"
         case .restoring: "Call ended"
-        case .manualOff: "AWDL off"
-        case .manualOn: "AWDL on"
+        case .manualOff: "Protecting (manual)"
+        case .manualOn: "Paused"
         }
     }
     private var subtitle: String {
         switch state.headline {
-        case .helperMissing: "Install the helper once to let AWDLess manage AWDL."
-        case .standby: state.prefs.triggerCamera ? "AWDL on. Starts protecting when a camera turns on." : "Camera detection is off."
+        case .helperMissing: "Install the helper once so AWDLess can protect calls."
+        case .standby: state.prefs.triggerCamera ? "Will protect your call as soon as a camera turns on." : "Camera detection is off."
         case .ethernet: "\(state.subject). AWDL cannot hurt a wired link."
         case .protecting: "\(state.subject). AirDrop and Handoff paused."
         case .protectingStalling: "\(state.subject). The link stalls even with AWDL off; something else is interfering."
         case .restoring: "AWDL comes back in \(Int(state.prefs.gracePeriod)) s."
-        case .manualOff: "Held off by you. AirDrop and Handoff paused."
-        case .manualOn: "Held on by you. Meetings are not protected."
+        case .manualOff: "AirDrop and Handoff paused until you switch back."
+        case .manualOn: "Meetings are not protected. AirDrop and Handoff work."
         }
     }
 
@@ -87,8 +87,7 @@ struct MenuView: View {
 
     private var helperCard: some View {
         HStack {
-            Text(state.helper.status == .requiresApproval ? "Approve AWDLess in Login Items." : "Needs a small root helper, installed by macOS.")
-                .font(.caption).foregroundStyle(.secondary)
+            Text(helperHint).font(.caption).foregroundStyle(.secondary)
             Spacer()
             Button(state.helper.status == .requiresApproval ? "Open Settings" : "Install") {
                 if state.helper.status == .requiresApproval { state.helper.openLoginItems() } else { state.helper.register() }
@@ -96,6 +95,11 @@ struct MenuView: View {
         }
         .padding(10)
         .background(RoundedRectangle(cornerRadius: 10).fill(.orange.opacity(0.12)))
+    }
+
+    private var helperHint: String {
+        if !state.isInApplicationsFolder { return "Move AWDLess to the Applications folder first, then install the helper." }
+        return state.helper.status == .requiresApproval ? "Approve AWDLess in Login Items." : "Needs a small root helper, installed by macOS."
     }
 
     // MARK: Link health
@@ -134,13 +138,13 @@ struct MenuView: View {
         VStack(spacing: 6) {
             Picker("", selection: Binding(get: { pickerValue }, set: { apply($0) })) {
                 Text("Auto").tag(0)
-                Text("Keep off").tag(1)
-                Text("Keep on").tag(2)
+                Text("Protect now").tag(1)
+                Text("Pause").tag(2)
             }.pickerStyle(.segmented).labelsHidden()
-            if case .automatic = state.override {} else {
-                HStack(spacing: 6) {
-                    Text(untilText).font(.caption2).foregroundStyle(.secondary)
-                    Spacer()
+            HStack(spacing: 6) {
+                Text(modeCaption).font(.caption2).foregroundStyle(.secondary).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 4)
+                if case .automatic = state.override {} else {
                     ForEach([("1 h", 3600.0), ("4 h", 14400.0), ("∞", -1.0)], id: \.0) { label, secs in
                         Button(label) { setTimed(secs < 0 ? nil : secs) }.controlSize(.mini)
                     }
@@ -168,11 +172,15 @@ struct MenuView: View {
         case .automatic: break
         }
     }
-    private var untilText: String {
+    private var modeCaption: String {
         let until: Date?
         switch state.override { case .forceOff(let u), .forceOn(let u): until = u; case .automatic: until = nil }
-        guard let until else { return "Until you switch back to Auto" }
-        return "Until \(until.formatted(date: .omitted, time: .shortened))"
+        let when = until.map { "until \($0.formatted(date: .omitted, time: .shortened))" } ?? "until you choose Auto"
+        switch state.override {
+        case .automatic: return "Protects meetings automatically; AirDrop and Handoff work in between."
+        case .forceOff: return "Protecting \(when). AirDrop and Handoff paused."
+        case .forceOn: return "Not protecting \(when). AirDrop and Handoff work normally."
+        }
     }
 
     // MARK: Footer
