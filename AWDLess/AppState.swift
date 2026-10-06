@@ -14,9 +14,10 @@ final class AppState: ObservableObject {
         case forceOn(until: Date?)      // AWDL on, triggers ignored
     }
     struct Trigger: Identifiable, Equatable {
-        enum Kind { case camera, microphone, app }
+        enum Kind { case camera, microphone, app, game }
         let kind: Kind
-        let name: String
+        let name: String          // device, app or game name
+        var app: String? = nil    // meeting app that is likely using it, if known
         var id: String { "\(kind)-\(name)" }
     }
 
@@ -26,6 +27,7 @@ final class AppState: ObservableObject {
     private let camera = CameraMonitor()
     private let microphone = MicrophoneMonitor()
     private let apps = AppMonitor()
+    private let games = GameMonitor()
     private let network = NetworkMonitor()
     private var pinger: Pinger?
     private let log = Logger(subsystem: AWDLessIDs.app, category: "state")
@@ -47,6 +49,7 @@ final class AppState: ObservableObject {
         camera.onChange = { [weak self] _ in self?.reevaluate() }
         microphone.onChange = { [weak self] _ in self?.reevaluate() }
         apps.onChange = { [weak self] _ in self?.reevaluate() }
+        games.onChange = { [weak self] _ in self?.reevaluate() }
         network.onChange = { [weak self] in self?.networkChanged() }
         apps.watchedBundleIDs = Set(prefs.watchedApps.map(\.bundleID))
         prefs.objectWillChange.sink { [weak self] in
@@ -63,29 +66,64 @@ final class AppState: ObservableObject {
 
     // MARK: - Policy
 
+    /// Known meeting apps currently running, by display name.
+    var runningMeetingApps: [String] {
+        NSWorkspace.shared.runningApplications.compactMap { app in
+            guard let id = app.bundleIdentifier else { return nil }
+            return MeetingApps.known[id]
+        }
+    }
+
     var activeTriggers: [Trigger] {
         var t: [Trigger] = []
-        if prefs.triggerCamera { t += camera.activeDevices.map { Trigger(kind: .camera, name: $0.name) } }
-        if prefs.triggerMicrophone { t += microphone.activeDevices.map { Trigger(kind: .microphone, name: $0.name) } }
+        let meetingApp = runningMeetingApps.first
+        if prefs.triggerCamera {
+            t += camera.activeDevices.map { Trigger(kind: .camera, name: $0.name, app: meetingApp) }
+        }
+        if prefs.triggerAnyMic || (prefs.triggerMeetingMic && meetingApp != nil) {
+            t += microphone.activeDevices.map { Trigger(kind: .microphone, name: $0.name, app: meetingApp) }
+        }
         if prefs.triggerApps { t += apps.running.map { Trigger(kind: .app, name: $0.localizedName ?? $0.bundleIdentifier ?? "app") } }
+        if prefs.triggerGames, let g = games.activeGame { t.append(Trigger(kind: .game, name: g.localizedName ?? "Game")) }
         return t
     }
 
-    /// Human-readable reason for the current state, for the menu and notifications.
-    var statusLine: String {
-        if helper.status != .enabled { return "Helper not enabled" }
+    enum Headline { case helperMissing, standby, ethernet, protecting, protectingStalling, restoring, manualOff, manualOn }
+    var headline: Headline {
+        if helper.status != .enabled { return .helperMissing }
         switch override {
-        case .forceOff: return "AWDL off (manual)"
-        case .forceOn: return "AWDL on (manual)"
+        case .forceOff: return .manualOff
+        case .forceOn: return .manualOn
         case .automatic: break
         }
-        if prefs.wifiOnly && !onWiFi && !triggers.isEmpty { return "On Ethernet, AWDL left alone" }
-        if suppressed, let first = triggers.first {
-            let extra = triggers.count > 1 ? " +\(triggers.count - 1)" : ""
-            return "AWDL off while \(first.name)\(extra) is in use"
+        if prefs.wifiOnly && !onWiFi && !triggers.isEmpty { return .ethernet }
+        if suppressed && inGrace && triggers.isEmpty { return .restoring }
+        if suppressed { return health.hasRecentStall ? .protectingStalling : .protecting }
+        return .standby
+    }
+
+    /// What is being protected, for the subtitle: "Zoom · FaceTime HD Camera".
+    var subject: String {
+        guard let first = triggers.first else { return "" }
+        var parts: [String] = []
+        if let app = first.app { parts.append(app) }
+        parts.append(first.name)
+        if triggers.count > 1 { parts.append("+\(triggers.count - 1)") }
+        return parts.joined(separator: " · ")
+    }
+
+    /// One-line status, used by notifications and accessibility.
+    var statusLine: String {
+        switch headline {
+        case .helperMissing: return "Helper not enabled"
+        case .standby: return "Standing by, AWDL on"
+        case .ethernet: return "On Ethernet, nothing to do"
+        case .protecting: return "Protecting \(subject)"
+        case .protectingStalling: return "Protecting \(subject), link stalling"
+        case .restoring: return "Restoring AWDL shortly"
+        case .manualOff: return "AWDL off (manual)"
+        case .manualOn: return "AWDL on (manual)"
         }
-        if suppressed && inGrace { return "AWDL off, restoring in a moment" }
-        return "Idle, AWDL on"
     }
 
     func reevaluate() {
@@ -194,7 +232,7 @@ final class AppState: ObservableObject {
             Task { @MainActor in
                 content.title = self.suppressed ? "AWDL off" : "AWDL back on"
                 content.body = self.suppressed
-                    ? "\(self.triggers.first?.name ?? "A call") is using the camera. AirDrop and Handoff pause until it stops."
+                    ? "Protecting \(self.subject.isEmpty ? "your call" : self.subject). AirDrop and Handoff pause until it ends."
                     : "AirDrop, Handoff and Continuity are available again."
                 center.add(UNNotificationRequest(identifier: "awdl-\(self.suppressed)", content: content, trigger: nil))
             }

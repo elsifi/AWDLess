@@ -9,7 +9,7 @@ struct AWDLessApp: App {
         MenuBarExtra {
             MenuView(helper: state.helper).environmentObject(state)
         } label: {
-            Image(nsImage: MenuBarIcon.image(for: iconState))
+            Image(nsImage: MenuBarIcon.image(for: iconState, style: state.prefs.iconStyle))
         }
         .menuBarExtraStyle(.window)
 
@@ -19,10 +19,14 @@ struct AWDLessApp: App {
     }
 
     private var iconState: MenuBarIcon.State {
-        if state.helper.status != .enabled { return .helperMissing }
-        if case .forceOn = state.override { return .manualOn }
-        if state.suppressed { return state.health.hasRecentStall ? .activeStalling : .active }
-        return .idle
+        switch state.headline {
+        case .helperMissing: .helperMissing
+        case .manualOn: .manualOn
+        case .protecting, .manualOff: .protecting
+        case .protectingStalling: .protectingStalling
+        case .ethernet: .ethernet
+        case .standby, .restoring: .standby
+        }
     }
 }
 

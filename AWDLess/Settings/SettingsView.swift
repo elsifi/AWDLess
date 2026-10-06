@@ -6,12 +6,12 @@ struct SettingsView: View {
     var body: some View {
         TabView {
             GeneralTab().tabItem { Label("General", systemImage: "gear") }
-            TriggersTab().tabItem { Label("Triggers", systemImage: "video") }
+            TriggersTab().tabItem { Label("Detection", systemImage: "video") }
             LinkHealthTab().tabItem { Label("Link Health", systemImage: "waveform.path.ecg") }
             HelperTab().tabItem { Label("Helper", systemImage: "lock.shield") }
             AboutTab().tabItem { Label("About", systemImage: "info.circle") }
         }
-        .frame(width: 460, height: 360)
+        .frame(width: 480, height: 420)
     }
 }
 
@@ -31,6 +31,11 @@ private struct GeneralTab: View {
                 Text("Avoids AirDrop flapping when a camera is toggled briefly.").settingsHint()
             }
             Toggle("Notify when AWDL turns off or on", isOn: $prefs.notifications)
+            Picker("Menu bar icon", selection: $prefs.iconStyle) {
+                ForEach(MenuBarIcon.Style.allCases) { style in
+                    HStack { Image(nsImage: MenuBarIcon.image(for: .protecting, style: style)); Text(style.label) }.tag(style)
+                }
+            }
         }
         .formStyle(.grouped)
     }
@@ -42,12 +47,16 @@ private struct TriggersTab: View {
     var body: some View {
         Form {
             Section {
-                Toggle("Camera in use", isOn: $prefs.triggerCamera)
-                Text("Any camera streaming to any app: built-in, USB, Continuity Camera. This is the case that was measured.").settingsHint()
-                Toggle("Microphone in use", isOn: $prefs.triggerMicrophone)
-                Text("Also covers audio-only calls. Siri, dictation and voice memos trigger it too.").settingsHint()
-            }
+                Toggle("A camera is in use", isOn: $prefs.triggerCamera)
+                Text("Any app streaming any camera: built-in, USB or Continuity Camera. This is the measured cause of call freezes.").settingsHint()
+                Toggle("A meeting app is using the microphone", isOn: $prefs.triggerMeetingMic)
+                Text("Audio-only calls in Zoom, Teams, FaceTime, Slack, Webex, Discord, Meet and others.").settingsHint()
+                Toggle("Any app is using the microphone", isOn: $prefs.triggerAnyMic)
+                Text("Broad: also Siri, dictation and voice memos.").settingsHint()
+            } header: { Text("Meetings") }
             Section {
+                Toggle("A game is in front", isOn: $prefs.triggerGames)
+                Text("Apps that declare the Games category or Game Mode support. Same idea as AWDLControl.").settingsHint()
                 Toggle("Chosen apps are running", isOn: $prefs.triggerApps)
                 ForEach(prefs.watchedApps) { app in
                     HStack {
@@ -59,7 +68,7 @@ private struct TriggersTab: View {
                     }
                 }
                 Button("Add App…") { addApp() }.disabled(!prefs.triggerApps)
-            } header: { Text("Apps") }
+            } header: { Text("Also protect") }
         }
         .formStyle(.grouped)
     }

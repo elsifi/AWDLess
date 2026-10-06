@@ -13,19 +13,25 @@ final class Preferences: ObservableObject {
         case duringCalls, always, never
         var id: String { rawValue }
         var label: String {
-            switch self { case .duringCalls: "While AWDL is off"; case .always: "Always"; case .never: "Never" }
+            switch self { case .duringCalls: "While protecting"; case .always: "Always"; case .never: "Never" }
         }
     }
 
-    @AppStorage("triggerCamera") var triggerCamera = true
-    @AppStorage("triggerMicrophone") var triggerMicrophone = false
-    @AppStorage("triggerApps") var triggerApps = false
+    // Meeting detection (primary)
+    @AppStorage("triggerCamera") var triggerCamera = true            // any camera streaming
+    @AppStorage("triggerMeetingMic") var triggerMeetingMic = true    // mic in use while a known meeting app runs
+    @AppStorage("triggerAnyMic") var triggerAnyMic = false           // any microphone use
+    // Secondary
+    @AppStorage("triggerGames") var triggerGames = false             // frontmost app is a game
+    @AppStorage("triggerApps") var triggerApps = false               // chosen apps running
+    @AppStorage("watchedAppsData") private var watchedAppsData: Data = Data()
+
     @AppStorage("wifiOnly") var wifiOnly = true
-    @AppStorage("gracePeriod") var gracePeriod: Double = 20          // seconds AWDL stays off after the last trigger ends
+    @AppStorage("gracePeriod") var gracePeriod: Double = 20
     @AppStorage("notifications") var notifications = true
+    @AppStorage("iconStyle") var iconStyle: MenuBarIcon.Style = .camera
     @AppStorage("linkHealthMode") var linkHealthMode: LinkHealthMode = .duringCalls
     @AppStorage("stallThresholdMs") var stallThresholdMs: Double = 500
-    @AppStorage("watchedAppsData") private var watchedAppsData: Data = Data()
 
     var watchedApps: [WatchedApp] {
         get { (try? JSONDecoder().decode([WatchedApp].self, from: watchedAppsData)) ?? [] }
