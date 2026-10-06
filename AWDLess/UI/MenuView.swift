@@ -205,9 +205,9 @@ struct MenuView: View {
 
     private var footer: some View {
         HStack {
-            SettingsLink { Label("Settings", systemImage: "gearshape") }.keyboardShortcut(",")
+            Button { SettingsWindow.shared.show() } label: { Label("Settings", systemImage: "gearshape") }.keyboardShortcut(",")
             Spacer()
-            Button { NSApp.terminate(nil) } label: { Label("Quit", systemImage: "power") }.keyboardShortcut("q")
+            Button { QuitConfirmation.run() } label: { Label("Quit", systemImage: "power") }.keyboardShortcut("q")
         }
         .buttonStyle(.borderless).controlSize(.small).foregroundStyle(.secondary)
         .padding(.horizontal, 4)

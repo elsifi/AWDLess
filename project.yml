@@ -36,6 +36,9 @@ targets:
         LSApplicationCategoryType: public.app-category.utilities
         NSHumanReadableCopyright: "© 2026 Mohamed ElSifi. MIT License."
         LSMinimumSystemVersion: "14.0"
+        CFBundleURLTypes:
+          - CFBundleURLName: com.elsifi.AWDLess
+            CFBundleURLSchemes: [awdless]
     entitlements:
       path: AWDLess/AWDLess.entitlements
       properties:
