@@ -36,11 +36,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
     }
-    /// awdless://settings  awdless://mode/auto|off|on
+    /// awdless://settings  awdless://test  awdless://mode/auto|off|on
     func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls {
             switch (url.host, url.pathComponents.dropFirst().first) {
             case ("settings", _): SettingsWindow.shared.show()
+            case ("test", _): DiagnosticsWindow.shared.show()
             case ("mode", "auto"): AppState.shared.setOverride(.automatic)
             case ("mode", "off"): AppState.shared.setOverride(.forceOff(until: Date().addingTimeInterval(3600)))
             case ("mode", "on"): AppState.shared.setOverride(.forceOn(until: Date().addingTimeInterval(3600)))
