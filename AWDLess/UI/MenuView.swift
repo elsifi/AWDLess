@@ -72,10 +72,10 @@ struct MenuView: View {
     }
     private var subtitle: String {
         switch state.headline {
-        case .helperMissing: "Install the helper once so AWDLess can switch Continuity off during meetings."
-        case .standby: state.prefs.triggerCamera ? "Universal Control, AirDrop and Handoff work. They switch off as soon as a camera turns on." : "Camera detection is off."
+        case .helperMissing: "Install the helper once; it switches Continuity off during meetings."
+        case .standby: state.prefs.triggerCamera ? "Switches off when a camera turns on." : "Camera detection is off."
         case .ethernet: "\(state.subject). Continuity cannot disturb a wired link, so it stays on."
-        case .protecting: "\(state.subject). Universal Control, AirDrop and Handoff are off until the call ends."
+        case .protecting: "\(state.subject). Universal Control and AirDrop are off until the call ends."
         case .protectingStalling: "\(state.subject). Continuity is off, yet the Wi-Fi link still stalls. Something else is interfering."
         case .restoring: "Continuity comes back on in \(Int(state.prefs.gracePeriod)) s."
         case .manualOff: "Universal Control, AirDrop and Handoff are off until you switch back."
