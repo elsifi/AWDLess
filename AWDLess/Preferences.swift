@@ -29,7 +29,7 @@ final class Preferences: ObservableObject {
     @AppStorage("wifiOnly") var wifiOnly = true
     @AppStorage("gracePeriod") var gracePeriod: Double = 20
     @AppStorage("notifications") var notifications = true
-    @AppStorage("iconStyle") var iconStyle: MenuBarIcon.Style = .camera
+    @AppStorage("iconStyle") var iconStyle: MenuBarIcon.Style = .link
     @AppStorage("linkHealthMode") var linkHealthMode: LinkHealthMode = .duringCalls
     @AppStorage("stallThresholdMs") var stallThresholdMs: Double = 500
 

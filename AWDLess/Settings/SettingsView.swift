@@ -33,7 +33,7 @@ private struct GeneralTab: View {
             Toggle("Notify when Continuity switches off and on", isOn: $prefs.notifications)
             Picker("Menu bar icon", selection: $prefs.iconStyle) {
                 ForEach(MenuBarIcon.Style.allCases) { style in
-                    HStack { Image(nsImage: MenuBarIcon.image(for: .protecting, style: style)); Text(style.label) }.tag(style)
+                    HStack { Image(nsImage: MenuBarIcon.image(for: .standby, style: style)); Image(nsImage: MenuBarIcon.image(for: .protecting, style: style)); Text(style.label) }.tag(style)
                 }
             }
         }
