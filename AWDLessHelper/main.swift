@@ -23,13 +23,13 @@ final class HelperService: NSObject, AWDLessHelperProtocol, NSXPCListenerDelegat
 
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
         clients += 1
-        log.info("client connected (pid \(connection.processIdentifier)), clients=\(self.clients)")
+        log.notice("client connected (pid \(connection.processIdentifier)), clients=\(self.clients)")
         connection.exportedInterface = NSXPCInterface(with: AWDLessHelperProtocol.self)
         connection.exportedObject = self
         let onGone: () -> Void = { [weak self] in
             guard let self else { return }
             self.clients = max(0, self.clients - 1)
-            log.info("client gone, clients=\(self.clients)")
+            log.notice("client gone, clients=\(self.clients)")
             if self.clients == 0 { self.monitor.setSuppressed(false) }
         }
         connection.invalidationHandler = onGone
@@ -66,5 +66,5 @@ if let team = ownTeamIdentifier() {
 listener.setConnectionCodeSigningRequirement(requirement)
 listener.delegate = service
 listener.resume()
-log.info("AWDLessHelper \(AWDLessIDs.helperVersion) listening; requirement: \(requirement, privacy: .public)")
+log.notice("AWDLessHelper \(AWDLessIDs.helperVersion) listening; requirement: \(requirement, privacy: .public)")
 dispatchMain()

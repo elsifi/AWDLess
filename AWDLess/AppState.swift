@@ -207,7 +207,7 @@ final class AppState: ObservableObject {
     private func apply(_ desired: Bool) {
         guard desired != suppressed else { updateLinkHealthRunning(); return }
         suppressed = desired
-        log.info("suppressed -> \(desired); triggers: \(self.triggers.map(\.name).joined(separator: ", "), privacy: .public)")
+        log.notice("suppressed -> \(desired); triggers: \(self.triggers.map(\.name).joined(separator: ", "), privacy: .public)")
         helper.setSuppressed(desired) { [weak self] ok in
             guard let self else { return }
             if !ok { self.log.error("helper call failed") }

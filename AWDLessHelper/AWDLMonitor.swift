@@ -42,7 +42,7 @@ final class AWDLMonitor {
     func setSuppressed(_ value: Bool) {
         queue.async {
             self.suppressed = value
-            self.log.info("suppressed = \(value)")
+            self.log.notice("suppressed = \(value)")
             self.apply(up: !value)
         }
     }
@@ -79,7 +79,7 @@ final class AWDLMonitor {
         if ioctl(ioctlFD, SIOCSIFFLAGS, &ifr) != 0 {
             log.error("SIOCSIFFLAGS(up=\(up)) failed: errno \(errno)")
         } else {
-            log.info("awdl0 \(up ? "UP" : "DOWN")")
+            log.notice("awdl0 \(up ? "UP" : "DOWN")")
         }
     }
 
@@ -99,7 +99,7 @@ final class AWDLMonitor {
             if UInt32(index) == targetIndex, flags & Int32(IFF_UP) != 0 { cameUp = true }
         }
         if cameUp && suppressed {
-            log.info("awdl0 was brought up by the system; taking it down again")
+            log.notice("awdl0 was brought up by the system; taking it down again")
             apply(up: false)
         }
     }
