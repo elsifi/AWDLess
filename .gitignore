@@ -4,3 +4,11 @@ build/
 DerivedData/
 .DS_Store
 *.dmg
+# never commit signing material
+*.p8
+*.p12
+*.key
+*.csr
+*.cer
+*.mobileprovision
+*.provisionprofile
