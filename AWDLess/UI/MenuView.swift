@@ -100,7 +100,7 @@ struct MenuView: View {
                     Spacer()
                     let stalls = state.health.stallsInWindow
                     Text(stalls == 0 ? "no stalls" : "\(stalls) stall\(stalls == 1 ? "" : "s") / 60 s")
-                        .foregroundStyle(stalls == 0 ? .secondary : .orange)
+                        .foregroundStyle(stalls == 0 ? Color.secondary : Color.orange)
                 }.font(.caption2).foregroundStyle(.secondary)
             }
         }

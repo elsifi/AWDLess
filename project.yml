@@ -63,6 +63,9 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.elsifi.AWDLess.Helper
         PRODUCT_NAME: AWDLessHelper
         SKIP_INSTALL: YES
+        CREATE_INFOPLIST_SECTION_IN_BINARY: YES
+        INFOPLIST_FILE: AWDLessHelper/Info.plist
+        INFOPLIST_PREPROCESS: NO
 schemes:
   AWDLess:
     build:

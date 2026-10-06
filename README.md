@@ -58,6 +58,15 @@ so it cannot go on the Mac App Store.
 3. Start a video call. The icon switches to the slashed antenna; the menu shows which camera triggered it and the live
    link-health sparkline.
 
+## Product plan (not App Store)
+
+The fix needs a root helper, which the App Store sandbox forbids; there is no entitlement for it. So:
+
+- **AWDLess** (this app): direct download, notarized. Free diagnostic mode (link-health check during a call, demo run with
+  AWDL off, honest verdict), paid unlock for the automatic fix.
+- Optionally a free **App Store companion** that only diagnoses and links to the website. It must not sell or unlock the
+  download (App Review guidelines 2.4.5 and 3.1.1).
+
 ## License
 
 MIT. See LICENSE.
