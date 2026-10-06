@@ -56,7 +56,7 @@ private struct TriggersTab: View {
             } header: { Text("Meetings") }
             Section {
                 Toggle("A game is in front", isOn: $prefs.triggerGames)
-                Text("Apps that declare the Games category or Game Mode support. Same idea as AWDLControl.").settingsHint()
+                Text("Apps that declare the Games category or Game Mode support.").settingsHint()
                 Toggle("Chosen apps are running", isOn: $prefs.triggerApps)
                 ForEach(prefs.watchedApps) { app in
                     HStack {
@@ -149,7 +149,7 @@ private struct AboutTab: View {
             Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")").font(.caption).foregroundStyle(.secondary)
             Text("Continuity features such as Universal Control, AirDrop and Handoff run over a peer-to-peer Wi-Fi link (AWDL) that makes the radio hop channels on a shared schedule. During a video call that shows up as freezes of one to three seconds, on every Mac in the link. AWDLess switches that link off exactly while you are in a meeting.")
                 .font(.callout).multilineTextAlignment(.center).padding(.horizontal)
-            Text("Mechanism inspired by AWDLControl by James Howard. MIT License.")
+            Text("MIT License.")
                 .font(.caption).foregroundStyle(.secondary)
             Link("github.com/elsifi/AWDLess", destination: URL(string: "https://github.com/elsifi/AWDLess")!).font(.caption)
         }
